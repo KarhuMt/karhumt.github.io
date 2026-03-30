@@ -356,6 +356,61 @@
       color: #aaa;
     }
 
+    .city-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .city-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      padding: 0.9rem 1.2rem;
+      background: var(--mid);
+      border: 1px solid var(--border);
+    }
+
+    .city-name {
+      font-size: 0.9rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      color: var(--white);
+    }
+
+    .city-btn {
+      padding: 0.35rem 1rem;
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+    .city-btn:hover { background: var(--accent); color: var(--black); }
+
+    .locate-btn {
+      width: 100%;
+      padding: 0.9rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--silver);
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .locate-btn:hover { border-color: var(--accent); color: var(--accent); }
+
     @keyframes bounce {
       from { transform: translateY(0); }
       to   { transform: translateY(-12px); }
@@ -396,24 +451,26 @@
     <div class="result-impacted" id="resultImpacted">
       <div class="impact-alert">
         <div class="alert-title">⚠ Ajoneuvon akustossa tekninen vika!</div>
-        <p>Rekisterinumerolla <strong id="plateImpacted"></strong> rekisteröity BMW i4 on tunnistettu mahdollisen akkuvian piiriin. Varaa soittoaika huoltoyhtiöstä alla olevista vapaista ajoista.</p>
+        <p>Rekisterinumerolla <strong id="plateImpacted"></strong> rekisteröity BMW i4 on tunnistettu mahdollisen akkuvian piiriin. Varaa tarkistusaika ajoneuvollesi alta. Vapaat ajat löytyvät paikkakunta kohtaisesti</p>
       </div>
 
-      <p class="section-title">Valitse aika</p>
-      <div class="slot-table-wrap">
-        <table class="slot-table">
-          <thead>
-            <tr>
-              <th>Päivä</th>
-              <th>Aika</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="slotBody"></tbody>
-        </table>
+      <p class="section-title">Sinulle suositeltu paikakkunta</p>
+        <div class="city-row"><span class="city-name">Tuusula</span><button class="city-btn" onclick="triggerApril()">Tarkasta vapaat ajat</button></div>
+      
+      <div class="or-divider">Muita lähisöltä</div>
+      
+      <p class="section-title">Valitse huoltamo</p>
+      <div class="city-list">
+        <div class="city-row"><span class="city-name">Helsinki</span><button class="city-btn" onclick="triggerApril()">Tarkasta vapaat ajat</button></div>
+        <div class="city-row"><span class="city-name">Espoo</span><button class="city-btn" onclick="triggerApril()">Tarkasta vapaat ajat</button></div>
+        <div class="city-row"><span class="city-name">Vantaa</span><button class="city-btn" onclick="triggerApril()">Tarkasta vapaat ajat</button></div>
+        <div class="city-row"><span class="city-name">Lahti</span><button class="city-btn" onclick="triggerApril()">Tarkasta vapaat ajat</button></div>
+        <div class="city-row"><span class="city-name">Hämeenlinna</span><button class="city-btn" onclick="triggerApril()">Tarkasta vapaat ajat</button></div>
       </div>
 
-      <div class="or-divider">Jos sopivaa aikaa ei löydy</div>
+      <button class="locate-btn" onclick="triggerApril()">Etsi lähin huoltamosi</button>
+
+      <div class="or-divider">tai varaa aika huoltamolta</div>
 
       <p class="section-title">Ota yhteyttä puhelimitse</p>
       <div class="phone-box">
@@ -424,6 +481,7 @@
         </div>
       </div>
 
+      
     </div>
   </div>
 
@@ -446,7 +504,6 @@
     const resultImpacted = document.getElementById('resultImpacted');
     const plateClear = document.getElementById('plateClear');
     const plateImpacted = document.getElementById('plateImpacted');
-    const slotBody = document.getElementById('slotBody');
     const aprilScreen = document.getElementById('aprilScreen');
 
     const PLATE_REGEX = /^[A-Z]{2,3}-\d{1,3}$/;
@@ -470,7 +527,6 @@
         plateImpacted.textContent = val;
         resultClear.style.display = 'none';
         resultImpacted.style.display = 'block';
-        buildSlots();
       } else {
         plateClear.textContent = val;
         resultImpacted.style.display = 'none';
@@ -478,56 +534,6 @@
       }
     });
 
-    function buildSlots() {
-      slotBody.innerHTML = '';
-      const now = new Date();
-      const dayNames = ['su','ma','ti','ke','to','pe','la'];
-      const monthNames = ['tammikuuta','helmikuuta','maaliskuuta','huhtikuuta','toukokuuta','kesäkuuta','heinäkuuta','elokuuta','syyskuuta','lokakuuta','marraskuuta','joulukuuta'];
-
-      // Build list of 4 upcoming weekdays
-      let weekdays = [];
-      let d = new Date(now);
-      while (weekdays.length < 4) {
-        d.setDate(d.getDate() + (weekdays.length === 0 ? 0 : 1));
-        if (d.getDay() !== 0 && d.getDay() !== 6) weekdays.push(new Date(d));
-      }
-
-      let slotCount = 0;
-
-      weekdays.forEach((day, dayIndex) => {
-        // Generate all valid 15-min slots 09:00–15:00 for this day
-        const allSlots = [];
-        for (let h = 9; h < 15; h++) {
-          for (let m = 0; m < 60; m += 15) {
-            // For today (dayIndex===0), skip slots within 2 hours of now
-            if (dayIndex === 0) {
-              const slotTime = new Date(day);
-              slotTime.setHours(h, m, 0, 0);
-              if (slotTime.getTime() < now.getTime() + 2 * 60 * 60 * 1000) continue;
-            }
-            allSlots.push({ h, m });
-          }
-        }
-
-        if (allSlots.length === 0) return;
-
-        // Pick 5–10 random slots
-        const count = Math.min(allSlots.length, Math.floor(Math.random() * 2) + 2);
-        const shuffled = allSlots.sort(() => Math.random() - 0.5).slice(0, count);
-        shuffled.sort((a, b) => a.h * 60 + a.m - (b.h * 60 + b.m));
-
-        const dow = day.getDay();
-        const dateLabel = `${dayNames[dow]} ${day.getDate()}. ${monthNames[day.getMonth()]}`;
-
-        shuffled.forEach(({ h, m }) => {
-          const timeLabel = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-          const slotId = `slot-${slotCount++}`;
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${dateLabel}</td><td>${timeLabel}</td><td><button class="slot-btn" id="${slotId}" onclick="triggerApril()">Varaa</button></td>`;
-          slotBody.appendChild(tr);
-        });
-      });
-    }
 
     function triggerApril() {
       aprilScreen.style.display = 'flex';
